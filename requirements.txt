@@ -1,0 +1,23 @@
+# Data + SQL
+pandas>=2.1
+numpy>=1.26
+yfinance>=0.2.40
+SQLAlchemy>=2.0
+pyodbc>=5.0
+python-dotenv>=1.0
+requests>=2.31
+# Documents + RAG (all local / free)
+beautifulsoup4>=4.12
+lxml>=5.0
+sentence-transformers>=2.7
+chromadb>=0.5
+# Agent (local LLM through Ollama)
+langgraph>=0.2
+langchain-core>=0.3
+langchain-ollama>=0.2
+# API + UI
+fastapi>=0.110
+uvicorn[standard]>=0.29
+streamlit>=1.35
+# Tests
+pytest>=8.0

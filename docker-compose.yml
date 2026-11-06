@@ -1,0 +1,42 @@
+# One-command deploy:  docker compose up -d --build
+# Everything is free and local: SQL Server 2022 Developer/Express, Ollama, ChromaDB (embedded).
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports: ["1433:1433"]
+    volumes: [sqldata:/var/opt/mssql]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 12
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes: [ollama:/root/.ollama]
+    # NVIDIA GPU (optional): uncomment
+    # deploy: {resources: {reservations: {devices: [{driver: nvidia, count: all, capabilities: [gpu]}]}}}
+
+  api:
+    build: .
+    command: uvicorn finsight.api.main:app --host 0.0.0.0 --port 8000
+    env_file: .env
+    environment: {DB_HOST: sqlserver, OLLAMA_HOST: "http://ollama:11434"}
+    volumes: ["./data:/app/data"]
+    ports: ["8000:8000"]
+    depends_on: {sqlserver: {condition: service_healthy}, ollama: {condition: service_started}}
+
+  ui:
+    build: .
+    command: streamlit run ui/app.py --server.port 8501 --server.address 0.0.0.0
+    environment: {API_URL: "http://api:8000"}
+    ports: ["8501:8501"]
+    depends_on: [api]
+
+volumes:
+  sqldata:
+  ollama:
