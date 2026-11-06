@@ -79,19 +79,3 @@ UI: http://localhost:8501 - API docs: http://localhost:8000/docs
 ## Tests
 `pytest` runs 12 unit tests covering NaN guards, empty-year handling, ratio logic, chunking/overlap, XBRL cleaning and quant maths. No database, network or LLM needed.
 
-## Design decisions (interview notes)
-- **Two stores**: exact numbers in SQL, meaning-based retrieval in a vector store.
-- **No LLM-written SQL**: fixed, parameterized, testable functions.
-- **Idempotent**: every load is a `MERGE`; unique constraints; re-run anytime.
-- **Ratios in their own table**: derived data, recompute on formula fixes; missing input => NULL, never fabricated.
-- **Per-ticker try/except** and boundary validation so one bad record never stops the other 43.
-- **Resumable embedding** with retries (ChromaDB + antivirus file-lock lesson). On Windows, add a Defender exclusion for `data/chroma` if you see compaction errors.
-- **Local LLM caveat**: small models call tools less reliably than frontier models, hence explicit tool descriptions and a strict system prompt. Use a bigger model (`qwen2.5:14b`, `llama3.1:8b`) if your hardware allows.
-
-## Known limitations (kept honest, as in the project summary)
-- `current_ratio` is not computed (schema stores total, not current, assets/liabilities).
-- yfinance lacks total liabilities for some tickers (e.g. NVDA): ROE and debt/equity are NULL there by design. Only 4 fiscal years are available.
-- Beta uses an equal-weighted average of the 44 stocks as the market proxy (no paid index feed).
-- Only the latest 10-K per company is indexed (no year-over-year text comparison yet).
-- XOM resolves through a documented legacy-CIK override; NaN guards apply to all tickers' fundamentals.
-- Research support only. Not investment advice.
